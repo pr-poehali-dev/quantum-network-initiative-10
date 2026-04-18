@@ -54,9 +54,20 @@ export default function Section({ id, title, subtitle, content, isActive, showBu
     setShowBsod(true)
   }
 
+  const VIRUSES = [
+    'вирус', 'virus', 'троян', 'trojan', 'червь', 'worm', 'шпион', 'spyware',
+    'малварь', 'malware', 'ransomware', 'вымогатель', 'руткит', 'rootkit',
+    'keylogger', 'кейлоггер', 'backdoor', 'бэкдор', 'adware', 'реклама',
+    'exploit', 'эксплойт', 'ботнет', 'botnet', 'cryptominer', 'майнер',
+  ]
+
   const handleScan = () => {
     const val = scanInput.trim().toLowerCase()
-    if (val === 'антивирус' || val === 'antivirus') {
+    if (VIRUSES.some(v => val.includes(v))) {
+      setHint('')
+      setShowBsod(true)
+      setScanInput('')
+    } else if (val === 'антивирус' || val === 'antivirus') {
       setHint('')
       setShowBsod(true)
       setScanInput('')
