@@ -190,7 +190,7 @@ export default function LandingPage() {
       />
       <div ref={containerRef} className="h-full overflow-y-auto snap-y snap-mandatory">
         {sections.map((section, index) => (
-          <Section key={section.id} {...section} isActive={index === activeSection} />
+          <Section key={section.id} {...section} isActive={index === activeSection} onVirusTrigger={() => setShowVirus(true)} />
         ))}
       </div>
     </Layout>

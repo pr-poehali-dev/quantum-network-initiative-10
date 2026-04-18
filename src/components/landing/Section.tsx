@@ -44,7 +44,7 @@ function BsodScreen({ onClose }: { onClose: () => void }) {
   )
 }
 
-export default function Section({ id, title, subtitle, content, isActive, showButton, buttonText }: SectionProps) {
+export default function Section({ id, title, subtitle, content, isActive, showButton, buttonText, onVirusTrigger }: SectionProps) {
   const [showBsod, setShowBsod] = useState(false)
   const [scanInput, setScanInput] = useState('')
   const [shake, setShake] = useState(false)
@@ -65,8 +65,8 @@ export default function Section({ id, title, subtitle, content, isActive, showBu
     const val = scanInput.trim().toLowerCase()
     if (VIRUSES.some(v => val.includes(v))) {
       setHint('')
-      setShowBsod(true)
       setScanInput('')
+      onVirusTrigger?.()
     } else if (val === 'антивирус' || val === 'antivirus') {
       setHint('')
       setShowBsod(true)
