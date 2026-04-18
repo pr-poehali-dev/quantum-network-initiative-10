@@ -1,13 +1,14 @@
-import { ReactNode } from 'react'
+import { ReactNode, CSSProperties } from 'react'
 import { Squares } from "./squares-background"
 
 interface LayoutProps {
   children: ReactNode
+  style?: CSSProperties
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, style }: LayoutProps) {
   return (
-    <div className="h-screen overflow-hidden bg-black relative">
+    <div className="h-screen overflow-hidden bg-black relative" style={style}>
       <div className="absolute inset-0 z-10">
         <Squares
           direction="diagonal"

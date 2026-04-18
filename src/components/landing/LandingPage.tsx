@@ -4,6 +4,67 @@ import Section from './Section'
 import Layout from './Layout'
 import { sections } from './sections'
 
+function ShakeEasterEgg({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStep(1), 700)
+    const t2 = setTimeout(() => setStep(2), 3000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black cursor-pointer"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={step === 2 ? onClose : undefined}
+    >
+      {[...Array(20)].map((_, i) => (
+        <motion.div key={i} className="absolute w-full h-1 pointer-events-none"
+          style={{ top: `${Math.random() * 100}%`, backgroundColor: i % 3 === 0 ? '#ff0000' : i % 3 === 1 ? '#00ff00' : '#0000ff', opacity: 0.15 }}
+          animate={{ x: [-20, 20, -15, 15, 0], opacity: step >= 1 ? [0, 0.3, 0] : 0 }}
+          transition={{ duration: 0.3, delay: i * 0.05, repeat: step < 2 ? Infinity : 0 }}
+        />
+      ))}
+
+      <div className="relative z-10 text-center px-8 max-w-xl">
+        <AnimatePresence mode="wait">
+          {step === 0 && (
+            <motion.div key="g0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <motion.p
+                className="text-white font-mono text-3xl font-bold"
+                animate={{ x: [-4, 4, -3, 3, 0], color: ['#ff0000', '#00ff00', '#0000ff', '#ffffff'] }}
+                transition={{ duration: 0.15, repeat: Infinity }}
+              >
+                ⚠️ НЕСТАБИЛЬНОСТЬ СИСТЕМЫ
+              </motion.p>
+            </motion.div>
+          )}
+          {step === 1 && (
+            <motion.div key="g1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <motion.p
+                className="text-red-500 font-mono text-5xl font-bold mb-4"
+                animate={{ skewX: [-5, 5, -3, 3, 0] }}
+                transition={{ duration: 0.2, repeat: Infinity }}
+              >
+                ГЛЮК!
+              </motion.p>
+              <p className="text-green-300 font-mono text-sm">Зафиксировано резкое движение мышью.<br/>Антивирус подозревает панику пользователя...</p>
+            </motion.div>
+          )}
+          {step === 2 && (
+            <motion.div key="g2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <p className="text-green-400 font-mono text-5xl font-bold mb-4">ШУТКА! 😄</p>
+              <p className="text-green-300 font-mono text-sm mb-6">Не тряси мышкой — ПК не сломается!<br/>Хотя без антивируса — кто знает...</p>
+              <p className="text-gray-500 font-mono text-xs">Нажми в любом месте, чтобы закрыть</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  )
+}
+
 function KonamiEasterEgg({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
 
@@ -142,6 +203,8 @@ export default function LandingPage() {
   const [activeSection, setActiveSection] = useState(0)
   const [showVirus, setShowVirus] = useState(false)
   const [showKonami, setShowKonami] = useState(false)
+  const [showShake, setShowShake] = useState(false)
+  const [glitch, setGlitch] = useState(false)
   const [showInput, setShowInput] = useState(false)
   const [inputVal, setInputVal] = useState('')
   const [shake, setShake] = useState(false)
@@ -162,6 +225,29 @@ export default function LandingPage() {
     if (container) container.addEventListener('scroll', handleScroll)
     return () => { if (container) container.removeEventListener('scroll', handleScroll) }
   }, [])
+
+  // Mouse shake easter egg
+  useEffect(() => {
+    let moves: number[] = []
+    let triggered = false
+    const handleMove = (e: MouseEvent) => {
+      const now = Date.now()
+      moves.push(now)
+      moves = moves.filter(t => now - t < 500)
+      if (moves.length > 20 && !triggered && !showShake) {
+        triggered = true
+        setGlitch(true)
+        setTimeout(() => {
+          setGlitch(false)
+          setShowShake(true)
+          triggered = false
+          moves = []
+        }, 1200)
+      }
+    }
+    window.addEventListener('mousemove', handleMove)
+    return () => window.removeEventListener('mousemove', handleMove)
+  }, [showShake])
 
   // Konami code easter egg
   useEffect(() => {
@@ -200,12 +286,15 @@ export default function LandingPage() {
   }
 
   return (
-    <Layout>
+    <Layout style={glitch ? { filter: 'hue-rotate(180deg) contrast(2)', transition: 'none' } : {}}>
       <AnimatePresence>
         {showVirus && <VirusEasterEgg onClose={() => setShowVirus(false)} />}
       </AnimatePresence>
       <AnimatePresence>
         {showKonami && <KonamiEasterEgg onClose={() => setShowKonami(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showShake && <ShakeEasterEgg onClose={() => setShowShake(false)} />}
       </AnimatePresence>
 
       {/* Скрытая кнопка-пасхалка */}
