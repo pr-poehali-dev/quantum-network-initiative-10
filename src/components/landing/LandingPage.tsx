@@ -4,6 +4,71 @@ import Section from './Section'
 import Layout from './Layout'
 import { sections } from './sections'
 
+function KonamiEasterEgg({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStep(1), 600)
+    const t2 = setTimeout(() => setStep(2), 1800)
+    const t3 = setTimeout(() => setStep(3), 3200)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={step === 3 ? onClose : undefined}
+    >
+      {[...Array(30)].map((_, i) => (
+        <motion.div key={i} className="absolute text-green-500 font-mono text-xs select-none pointer-events-none"
+          style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={step >= 1 ? { opacity: [0, 1, 0], y: [0, 80] } : {}}
+          transition={{ duration: 2 + Math.random() * 2, delay: i * 0.08, repeat: Infinity }}
+        >
+          {Math.random() > 0.5 ? '1' : '0'}
+        </motion.div>
+      ))}
+
+      <div className="relative z-10 text-center px-8 max-w-2xl">
+        <AnimatePresence mode="wait">
+          {step === 0 && (
+            <motion.p key="s0" className="text-green-400 font-mono text-2xl"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              Код принят...
+            </motion.p>
+          )}
+          {step === 1 && (
+            <motion.div key="s1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <p className="text-green-400 font-mono text-6xl font-bold mb-4">👾</p>
+              <p className="text-green-400 font-mono text-2xl font-bold mb-2">ТЫ ХАКЕР!</p>
+              <p className="text-green-300 font-mono text-sm animate-pulse">Получаю доступ к системе...</p>
+            </motion.div>
+          )}
+          {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <p className="text-yellow-400 font-mono text-lg mb-2">{'> root@antivirus:~#'}</p>
+              <p className="text-green-300 font-mono text-sm mb-1">{'[OK] Доступ к ПК получен'}</p>
+              <p className="text-green-300 font-mono text-sm mb-1">{'[OK] Все файлы найдены'}</p>
+              <p className="text-red-400 font-mono text-sm mb-1 animate-pulse">{'[!!] Загружаю вирусы... 100%'}</p>
+              <p className="text-green-300 font-mono text-sm">{'[OK] Готово. Добро пожаловать.'}</p>
+            </motion.div>
+          )}
+          {step === 3 && (
+            <motion.div key="s3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <p className="text-green-400 font-mono text-5xl font-bold mb-4">ШУТКА! 😄</p>
+              <p className="text-green-300 font-mono text-sm mb-2">Конami-код найден. Ты настоящий геймер!</p>
+              <p className="text-green-300 font-mono text-sm mb-6">↑↑↓↓←→←→BA — классика с 1986 года</p>
+              <p className="text-gray-500 font-mono text-xs">Нажми в любом месте, чтобы закрыть</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  )
+}
+
 function VirusEasterEgg({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState(0)
 
@@ -76,6 +141,7 @@ function VirusEasterEgg({ onClose }: { onClose: () => void }) {
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState(0)
   const [showVirus, setShowVirus] = useState(false)
+  const [showKonami, setShowKonami] = useState(false)
   const [showInput, setShowInput] = useState(false)
   const [inputVal, setInputVal] = useState('')
   const [shake, setShake] = useState(false)
@@ -95,6 +161,25 @@ export default function LandingPage() {
     const container = containerRef.current
     if (container) container.addEventListener('scroll', handleScroll)
     return () => { if (container) container.removeEventListener('scroll', handleScroll) }
+  }, [])
+
+  // Konami code easter egg
+  useEffect(() => {
+    const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
+    let pos = 0
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === KONAMI[pos]) {
+        pos++
+        if (pos === KONAMI.length) {
+          setShowKonami(true)
+          pos = 0
+        }
+      } else {
+        pos = e.key === KONAMI[0] ? 1 : 0
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
   const handleSecretSubmit = () => {
@@ -118,6 +203,9 @@ export default function LandingPage() {
     <Layout>
       <AnimatePresence>
         {showVirus && <VirusEasterEgg onClose={() => setShowVirus(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showKonami && <KonamiEasterEgg onClose={() => setShowKonami(false)} />}
       </AnimatePresence>
 
       {/* Скрытая кнопка-пасхалка */}
