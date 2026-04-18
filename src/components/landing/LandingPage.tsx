@@ -76,7 +76,9 @@ function VirusEasterEgg({ onClose }: { onClose: () => void }) {
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState(0)
   const [showVirus, setShowVirus] = useState(false)
-  const [typed, setTyped] = useState('')
+  const [showInput, setShowInput] = useState(false)
+  const [inputVal, setInputVal] = useState('')
+  const [shake, setShake] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ container: containerRef })
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 })
@@ -95,18 +97,16 @@ export default function LandingPage() {
     return () => { if (container) container.removeEventListener('scroll', handleScroll) }
   }, [])
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const next = (typed + e.key).slice(-5).toLowerCase()
-      setTyped(next)
-      if (next === 'вирус' || next === 'virus') {
-        setShowVirus(true)
-        setTyped('')
-      }
+  const handleSecretSubmit = () => {
+    if (inputVal.trim().toLowerCase() === 'вирус' || inputVal.trim().toLowerCase() === 'virus') {
+      setShowInput(false)
+      setInputVal('')
+      setShowVirus(true)
+    } else {
+      setShake(true)
+      setTimeout(() => setShake(false), 500)
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [typed])
+  }
 
   const handleNavClick = (index: number) => {
     if (containerRef.current) {
@@ -119,6 +119,60 @@ export default function LandingPage() {
       <AnimatePresence>
         {showVirus && <VirusEasterEgg onClose={() => setShowVirus(false)} />}
       </AnimatePresence>
+
+      {/* Скрытая кнопка-пасхалка */}
+      <button
+        className="fixed bottom-4 left-4 z-40 w-6 h-6 opacity-10 hover:opacity-40 transition-opacity"
+        onClick={() => setShowInput(true)}
+        title=""
+      >
+        <span className="text-green-400 font-mono text-xs">{'>'}_</span>
+      </button>
+
+      {/* Диалог ввода секретного слова */}
+      <AnimatePresence>
+        {showInput && (
+          <motion.div
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/70"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowInput(false); setInputVal('') } }}
+          >
+            <motion.div
+              className="bg-gray-900 border border-green-500 rounded-lg p-8 w-80 font-mono"
+              initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+              animate={shake ? { x: [-10, 10, -8, 8, 0] } : { scale: 1, opacity: 1 }}
+              transition={shake ? { duration: 0.4 } : {}}
+            >
+              <p className="text-green-400 text-sm mb-1">{'>'} АНТИВИРУС v2.0</p>
+              <p className="text-green-300 text-xs mb-4 opacity-60">Введите секретный код доступа:</p>
+              <input
+                autoFocus
+                type="text"
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSecretSubmit()}
+                placeholder="_ _ _ _ _"
+                className="w-full bg-black border border-green-700 text-green-400 font-mono text-center text-lg px-3 py-2 rounded outline-none focus:border-green-400 placeholder:text-green-900 tracking-widest"
+              />
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={handleSecretSubmit}
+                  className="flex-1 bg-green-700 hover:bg-green-600 text-black font-bold py-2 rounded text-sm transition-colors"
+                >
+                  ВВОД
+                </button>
+                <button
+                  onClick={() => { setShowInput(false); setInputVal('') }}
+                  className="flex-1 border border-gray-600 hover:border-gray-400 text-gray-400 py-2 rounded text-sm transition-colors"
+                >
+                  ОТМЕНА
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <nav className="fixed top-0 right-0 h-screen flex flex-col justify-center z-30 p-4">
         {sections.map((section, index) => (
           <button
