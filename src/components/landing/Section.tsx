@@ -46,9 +46,25 @@ function BsodScreen({ onClose }: { onClose: () => void }) {
 
 export default function Section({ id, title, subtitle, content, isActive, showButton, buttonText }: SectionProps) {
   const [showBsod, setShowBsod] = useState(false)
+  const [scanInput, setScanInput] = useState('')
+  const [shake, setShake] = useState(false)
+  const [hint, setHint] = useState('')
 
   const handleButtonClick = () => {
     setShowBsod(true)
+  }
+
+  const handleScan = () => {
+    const val = scanInput.trim().toLowerCase()
+    if (val === 'антивирус' || val === 'antivirus') {
+      setHint('')
+      setShowBsod(true)
+      setScanInput('')
+    } else {
+      setShake(true)
+      setHint('Угроза не найдена. Попробуй ещё раз...')
+      setTimeout(() => setShake(false), 500)
+    }
   }
 
   return (
@@ -98,6 +114,39 @@ export default function Section({ id, title, subtitle, content, isActive, showBu
             >
               {buttonText}
             </Button>
+          </motion.div>
+        )}
+
+        {id === 'hero' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isActive ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-8"
+          >
+            <p className="text-neutral-500 text-sm mb-2">Проверь свой ПК на вирусы:</p>
+            <motion.div
+              className="flex gap-2 max-w-sm"
+              animate={shake ? { x: [-8, 8, -6, 6, 0] } : {}}
+              transition={{ duration: 0.4 }}
+            >
+              <input
+                type="text"
+                value={scanInput}
+                onChange={(e) => { setScanInput(e.target.value); setHint('') }}
+                onKeyDown={(e) => e.key === 'Enter' && handleScan()}
+                placeholder="Введи название угрозы..."
+                className="bg-transparent border border-neutral-700 focus:border-green-500 text-white text-sm px-4 py-2 rounded outline-none w-full placeholder:text-neutral-600 transition-colors"
+              />
+              <Button
+                size="sm"
+                onClick={handleScan}
+                className="bg-green-700 hover:bg-green-600 text-black font-bold px-4 whitespace-nowrap"
+              >
+                Сканировать
+              </Button>
+            </motion.div>
+            {hint && <p className="text-red-400 text-xs mt-2">{hint}</p>}
           </motion.div>
         )}
       </section>
