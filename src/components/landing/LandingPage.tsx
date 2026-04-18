@@ -4,6 +4,112 @@ import Section from './Section'
 import Layout from './Layout'
 import { sections } from './sections'
 
+const THREATS = [
+  { name: 'Trojan.Win32.Agent.xyz', path: 'C:\\Users\\User\\AppData\\Temp\\svchost32.exe', level: 'Высокая' },
+  { name: 'Adware.SearchBar.gen', path: 'C:\\Program Files\\SearchToolbar\\toolbar.dll', level: 'Средняя' },
+  { name: 'Spyware.KeyLogger.b', path: 'C:\\Windows\\System32\\drivers\\kbdhook.sys', level: 'Критическая' },
+  { name: 'Worm.AutoRun.USB', path: 'D:\\autorun.inf', level: 'Высокая' },
+  { name: 'Backdoor.IRC.Bot', path: 'C:\\Users\\User\\Downloads\\crack_v2.exe', level: 'Критическая' },
+]
+
+function AntivirusNotification() {
+  const [visible, setVisible] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [found, setFound] = useState(0)
+  const [done, setDone] = useState(false)
+  const [threat] = useState(() => THREATS[Math.floor(Math.random() * THREATS.length)])
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (!scanning) return
+    const interval = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) { clearInterval(interval); setDone(true); return 100 }
+        if (p === 40) setFound(1)
+        if (p === 75) setFound(2)
+        return p + 2
+      })
+    }, 60)
+    return () => clearInterval(interval)
+  }, [scanning])
+
+  if (!visible) return null
+
+  return (
+    <motion.div
+      className="fixed bottom-6 right-6 z-40 w-80 rounded-lg overflow-hidden shadow-2xl"
+      style={{ background: '#1a1a2e', border: '1px solid #e74c3c' }}
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: 'spring', damping: 20 }}
+    >
+      <div className="flex items-center gap-2 px-4 py-2" style={{ background: '#e74c3c' }}>
+        <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+        <span className="text-white text-xs font-bold tracking-wide uppercase">Антивирус — Предупреждение</span>
+        <button onClick={() => setVisible(false)} className="ml-auto text-white opacity-70 hover:opacity-100 text-lg leading-none">×</button>
+      </div>
+
+      <div className="p-4">
+        {!scanning && !done && (
+          <>
+            <p className="text-red-400 font-bold text-sm mb-1">⚠️ Обнаружена подозрительная активность!</p>
+            <p className="text-gray-300 text-xs mb-1">Угроза: <span className="text-yellow-400">{threat.name}</span></p>
+            <p className="text-gray-500 text-xs mb-3 truncate">{threat.path}</p>
+            <p className="text-gray-400 text-xs mb-3">Уровень опасности: <span className="text-red-400 font-bold">{threat.level}</span></p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setScanning(true)}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 rounded transition-colors"
+              >
+                Сканировать сейчас
+              </button>
+              <button
+                onClick={() => setVisible(false)}
+                className="flex-1 border border-gray-600 text-gray-400 hover:text-gray-200 text-xs py-2 rounded transition-colors"
+              >
+                Игнорировать
+              </button>
+            </div>
+          </>
+        )}
+
+        {scanning && !done && (
+          <>
+            <p className="text-green-400 text-xs font-bold mb-2 animate-pulse">Сканирование системы...</p>
+            <div className="w-full bg-gray-800 rounded-full h-2 mb-2">
+              <motion.div
+                className="h-2 rounded-full bg-green-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-gray-500 text-xs mb-1">{progress}% завершено</p>
+            {found > 0 && <p className="text-red-400 text-xs">Найдено угроз: {found}</p>}
+          </>
+        )}
+
+        {done && (
+          <>
+            <p className="text-red-400 font-bold text-sm mb-2">🚨 Найдено угроз: {found}</p>
+            <p className="text-gray-300 text-xs mb-1 truncate">• {threat.name}</p>
+            <p className="text-gray-300 text-xs mb-3">• Adware.SearchBar.gen</p>
+            <button
+              onClick={() => setVisible(false)}
+              className="w-full bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-2 rounded transition-colors"
+            >
+              Удалить угрозы
+            </button>
+          </>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
 function ShakeEasterEgg({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
 
@@ -287,6 +393,7 @@ export default function LandingPage() {
 
   return (
     <Layout style={glitch ? { filter: 'hue-rotate(180deg) contrast(2)', transition: 'none' } : {}}>
+      <AntivirusNotification />
       <AnimatePresence>
         {showVirus && <VirusEasterEgg onClose={() => setShowVirus(false)} />}
       </AnimatePresence>
